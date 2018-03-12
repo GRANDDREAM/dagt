@@ -56,7 +56,7 @@ function setLockMonth(uint256 _amount)  {
     LockinMonth1=false;
     LockinMonth2=false;
     LockinMonth3=false;
-    LockinMonth4=false;
+    LockinMonth4=false;d
     LockinMonth0 = true;
     mintedNums=0;
   }
@@ -64,7 +64,7 @@ function setLockMonth(uint256 _amount)  {
   {
     LockinMonth0 = false;
   }
-   //
+   //e
     if( now >=1525881600 && now< 1527782400 && LockinMonth1==false)
     {
       LockinMonth0 = false;
