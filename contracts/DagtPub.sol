@@ -1,46 +1,25 @@
 pragma solidity ^0.4.17;
 
-import 'zeppelin-solidity/contracts/token/ERC20/MintableToken.sol';
-import 'zeppelin-solidity/contracts/math/SafeMath.sol';
+
+import "./DagtStandard.sol";
 
 
-contract DagtPub is MintableToken {
+contract DagtPub is DagtStandard {
 
-using SafeMath for uint256;
-
-string public name = "DAGT Token";
-
-string public symbol = "DAGT";
-
-uint8 public decimals = 7;
-
-uint public INITIAL_SUPPLY = 20000000;
-
-// new rates
-uint256 public constant RATE1 =  1400;
-uint256 public constant RATE2 =  1310;
-uint256 public constant RATE3 =  1240;
-uint256 public constant RATE4 =  1180;
-uint256 public constant RATE5 =  1118;
-
-  // Cap per tier for bonus in wei.
-  //uint256 public constant TIER1 =  10000000000000000000000;
-  //uint256 public constant TIER2 =  25000000000000000000000;
-  //uint256 public constant TIER3 =  50000000000000000000000;
-uint256 public initTimeStamp;
 function DagtPub() public {
-    initTimeStamp = now;    
+
+    INITIAL_SUPPLY = 20000000;
+    RATE1 =  1400;
+    RATE2 =  1310;
+    RATE3 =  1240;
+    RATE4 =  1180;
+    RATE5 =  1118;
     totalSupply_ = INITIAL_SUPPLY;
     balances[msg.sender] = INITIAL_SUPPLY;
 }
 
-function test() returns (uint256 initTimes,uint256 nowtime,uint256 blocktime) {
-  return  (initTimeStamp,now,block.timestamp);
-}
-modifier onlyMintingFinished() {
-  require(mintingFinished == true);
-  _;
-}
+
+
 /*
 function test() returns (string block0) {
 
