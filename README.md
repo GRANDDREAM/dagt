@@ -5,3 +5,5 @@
 封装汇率
 封装交易
 时间控制
+
+分拆setLockMonth函数适用Redmix编译 
