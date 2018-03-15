@@ -1,9 +1,10 @@
 pragma solidity ^0.4.17;
 
+//import 'zeppelin-solidity/contracts/token/ERC20/MintableToken.sol';
+//import 'zeppelin-solidity/contracts/math/SafeMath.sol';
+import "./DagtStandard.sol";
 
-import "./Dagt.sol";
-
-contract DagtPri is Dagt {
+contract DagtPri is DagtStandard {
 
 uint public LOCK_NUMS_SUPPLY = 20000000;
 
@@ -13,7 +14,7 @@ bool private LockinMonth2=false;
 bool private LockinMonth3=false;
 bool private LockinMonth4=false;
 
-uint256 mintedNums=0;
+uint256 mintedNums;
 // new rates
 
   // Cap per tier for bonus in wei.
@@ -23,7 +24,7 @@ uint256 mintedNums=0;
 
 function DagtPri() public {
 
-   INITIAL_SUPPLY = 100000000;
+    INITIAL_SUPPLY = 100000000;
     RATE1 =  1700;
     RATE2 =  1600;
     RATE3 =  1400;
@@ -35,22 +36,15 @@ function DagtPri() public {
 }
 
 
-function mint(address _to, uint256 _amount)  public returns (bool)
-{
-     setLockMonth();
-     setLockMonth_2();
-     setMouthEnable(_amount);
-     if(LockinMonth0==true||LockinMonth1==true||LockinMonth2==true||LockinMonth3==true||LockinMonth4==true)
-     {
-       bool ret =  super.mint(_to,_amount);
-       setMintNum(_amount);
-       return ret;
-     }else
-     {
-       return  false;
-     }
 
+function lockSupplyNum() returns (uint256,uint256) {
+
+   return  (mintedNums,totalSupply());
 }
+function setMintNum(uint256 _amount) returns (bool) {
+  mintedNums =mintedNums+_amount;
+}
+
 
 function setLockMonth()  {
   //2018/5/10 0:0:0 1525881600;2018/6/1 0:0:0 1527782400;2018/7/1 0:0:0 1530374400
@@ -149,15 +143,23 @@ function setMouthEnable(uint256 _amount)
       LockinMonth4=false;
     }
 }
-function lockSupplyNum() returns (uint256,uint256) {
 
-   return  (mintedNums,totalSupply());
+
+function mint(address _to, uint256 _amount)  public returns (bool)
+{
+     setLockMonth();
+     setLockMonth_2();
+     setMouthEnable(_amount);
+     if(LockinMonth0==true||LockinMonth1==true||LockinMonth2==true||LockinMonth3==true||LockinMonth4==true)
+     {
+       bool ret =  super.mint(_to,_amount);
+       setMintNum(_amount);
+       return ret;
+     }else
+     {
+       return  false;
+     }
+
 }
-
-function setMintNum(uint256 _amount) returns (bool) {
-  mintedNums =mintedNums+_amount;
-}
-
-
 
 }
