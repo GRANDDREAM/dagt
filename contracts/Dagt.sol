@@ -8,7 +8,7 @@ contract Dagt is MintableToken {
 
   using SafeMath for uint256;
 
-  string public constant name = "DAGT Token";
+  string public constant name = "DAGT";
   string public constant symbol = "DAGT";
   uint8   public  constant decimals = 18;
 
