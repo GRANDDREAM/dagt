@@ -7,3 +7,5 @@
 时间控制
 
 分拆setLockMonth函数适用Redmix编译 
+
+整理合约，以便Remix编译发布,在MetaMask测试网发布成功。
