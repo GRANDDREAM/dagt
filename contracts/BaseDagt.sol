@@ -3,7 +3,7 @@ pragma solidity ^0.4.4;
 import "./Ownable.sol";
 import './MintableToken.sol';
 import './SafeMath.sol';
-contract BaseDagt {
+contract BaseDagt is Ownable{
 
   using SafeMath for uint256;
 
