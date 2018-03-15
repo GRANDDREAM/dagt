@@ -10,7 +10,7 @@ contract BaseDagt {
 
   string public name = "DAGT Token";
   string public symbol = "DAGT";
-  uint8   public decimals = 8;
+  uint8   public decimals = 18;
   uint    public INITIAL_SUPPLY = 20000000;
   uint256  public initTimeStamp;
 
@@ -27,7 +27,9 @@ contract BaseDagt {
     //uint256 public constant TIER1 =  10000000000000000000000;
     //uint256 public constant TIER2 =  25000000000000000000000;
     //uint256 public constant TIER3 =  50000000000000000000000;
-
+    //white listed address
+  mapping (address => bool) public whiteListedAddress;
+  mapping (address => bool) public whiteListedAddressPresale;
 
   function BaseDagt() {
 
@@ -37,7 +39,7 @@ contract BaseDagt {
 
 
 
-  function getDAGTRate() returns (uint256 rate ,uint blocktime,uint256 blocknum) {
+  function getDAGTRate() returns (uint256 rate) {
     //uint256  timeRate1_1 = 1521129600;// ToTimestamp(2018, 3, 16, 0, 0, 0);
     //uint256  timeRate1_2 = 1521993599;// ToTimestamp(2018, 3, 25, 23, 59, 59);
   //  require(timeRate1_1 >= initTimeStamp);
@@ -97,8 +99,56 @@ contract BaseDagt {
     {
     //  throw;
     }
-    blocktime = block.timestamp;
-    blocknum = block.number;
+  //  blocktime = block.timestamp;
+  //  blocknum = block.number;
     //return rate;
   }
+
+  modifier onlyPresaleWhitelisted() {
+    require( isWhitelistedPresale(msg.sender) ) ;
+    _;
+  }
+
+  modifier onlyWhitelisted() {
+    require( isWhitelisted(msg.sender) || isWhitelistedPresale(msg.sender) ) ;
+    _;
+  }
+  /**
+     * @dev Add a list of address to be whitelisted for the crowdsale only.
+     * @param _users , the list of user Address. Tested for out of gas until 200 addresses.
+     */
+    function whitelistAddresses( address[] _users) onlyOwner {
+      for( uint i = 0 ; i < _users.length ; i++ ) {
+        whiteListedAddress[_users[i]] = true;
+      }
+    }
+
+    function unwhitelistAddress( address _users) onlyOwner {
+      whiteListedAddress[_users] = false;
+    }
+
+    /**
+     * @dev Add a list of address to be whitelisted for the Presale And sale.
+     * @param _users , the list of user Address. Tested for out of gas until 200 addresses.
+     */
+    function whitelistAddressesPresale( address[] _users) onlyOwner {
+      for( uint i = 0 ; i < _users.length ; i++ ) {
+        whiteListedAddressPresale[_users[i]] = true;
+      }
+    }
+
+    function unwhitelistAddressPresale( address _users) onlyOwner {
+      whiteListedAddressPresale[_users] = false;
+    }
+
+    function isWhitelisted(address _user) public constant returns (bool) {
+      return whiteListedAddress[_user];
+    }
+
+    function isWhitelistedPresale(address _user) public constant returns (bool) {
+      return whiteListedAddressPresale[_user];
+    }
+
+
+
 }

@@ -15,7 +15,7 @@ contract BasicToken is ERC20Basic {
   mapping(address => uint256) balances;
 
   uint256 totalSupply_;
-  uint256 mintedSupply;  
+  uint256 mintedSupply;
 //  bool priRaise=true;
   /**
   * @dev total number of tokens in existence
