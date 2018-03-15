@@ -352,7 +352,7 @@ uint256 mintedNums=0;
   //uint256 public constant TIER2 =  25000000000000000000000;
   //uint256 public constant TIER3 =  50000000000000000000000;
 
-function DagtPri() public {
+function DAGTPriToken() public {
 
     INITIAL_SUPPLY = 100000000;
     RATE1 =  1700;
