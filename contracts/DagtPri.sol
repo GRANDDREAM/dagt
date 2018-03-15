@@ -41,18 +41,7 @@ function transfer(address _to, uint256 _value) public onlyWhitelisted  returns (
 
 function mint(address _to, uint256 _amount)  public returns (bool)
 {
-     setLockMonth();
-     setLockMonth_2();
-     setMouthEnable(_amount);
-     if(LockinMonth0==true||LockinMonth1==true||LockinMonth2==true||LockinMonth3==true||LockinMonth4==true)
-     {
-       bool ret =  super.mint(_to,_amount);
-       setMintNum(_amount);
-       return ret;
-     }else
-     {
-       return  false;
-     }
+  return  super.mint(_to,_amount);
 
 }
 
@@ -61,21 +50,23 @@ function () payable {
 }
 function buyTokensPresale(address beneficiary) payable {
   require(beneficiary != 0x0);
-  require(validPurchasePresale());
+  uint256 tokens = weiAmount.mul(rate);
+
+  require(validPurchasePresale(tokens));
 
   setLockMonth();
   setLockMonth_2();
-  setMouthEnable(_amount);
+  setMouthEnable(tokens);
 
   uint256 weiAmount = msg.value;
   uint256 rate=getDAGTRate();
-  uint256 tokens = weiAmount.mul(rate);
-  weiRaisedPreSale = weiRaisedPreSale.add(weiAmount);
+
+  //weiRaisedPreSale = weiRaisedPreSale.add(weiAmount);
   mint(beneficiary, tokens);
   TokenPurchase(msg.sender, beneficiary, weiAmount, tokens);
   //forwardFunds();
 }
-function validPurchasePresale() internal constant returns (bool) {
+function validPurchasePresale(uint256 _amount) internal constant returns (bool) {
 //  bool withinPeriod = (block.number >= startBlock) && (block.number <= endPresale);
   //bool nonZeroPurchase = msg.value != 0;
   //bool withinCap = weiRaisedPreSale.add(msg.value) <= presaleCap;
