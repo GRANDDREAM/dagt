@@ -23,7 +23,7 @@ contract Dagt is MintableToken, BaseDagt{
     }
 
     //不需要挖矿
-  function transfer(address _to, uint256 _value) public  onlyWhitelisted  returns (bool) {
+  function transfer(address _to, uint256 _value) public   returns (bool) {
       return super.transfer(_to, _value);
     }
 

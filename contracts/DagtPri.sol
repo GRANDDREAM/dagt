@@ -34,6 +34,10 @@ function DagtPri() public {
     balances[msg.sender] = INITIAL_SUPPLY;
 }
 
+function transfer(address _to, uint256 _value) public onlyWhitelisted  returns (bool)  {
+    return super.transfer(_to, _value);
+  }
+
 
 function mint(address _to, uint256 _amount)  public returns (bool)
 {
