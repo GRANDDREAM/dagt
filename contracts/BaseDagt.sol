@@ -1,4 +1,4 @@
-pragma solidity ^0.4.4;
+pragma solidity ^0.4.18;
 
 import "./Ownable.sol";
 import './MintableToken.sol';
@@ -29,6 +29,9 @@ contract BaseDagt is Ownable{
     //white listed address
   mapping (address => bool) public whiteListedAddress;
   mapping (address => bool) public whiteListedAddressPresale;
+  address public wallet;
+  
+  event TokenPurchase(address indexed purchaser, address indexed beneficiary, uint256 value, uint256 amount);
 
   function BaseDagt() {
 
@@ -36,7 +39,9 @@ contract BaseDagt is Ownable{
 
   }
 
-
+  function forwardFunds() internal {
+    wallet.transfer(msg.value);
+  }
 
   function getDAGTRate() returns (uint256 rate) {
     //uint256  timeRate1_1 = 1521129600;// ToTimestamp(2018, 3, 16, 0, 0, 0);

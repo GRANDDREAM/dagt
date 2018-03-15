@@ -1,4 +1,4 @@
-pragma solidity ^0.4.17;
+pragma solidity ^0.4.18;
 
 
 import "./Dagt.sol";
@@ -56,6 +56,34 @@ function mint(address _to, uint256 _amount)  public returns (bool)
 
 }
 
+function () payable {
+  buyTokensPresale(msg.sender);
+}
+function buyTokensPresale(address beneficiary) payable {
+  require(beneficiary != 0x0);
+  require(validPurchasePresale());
+
+  setLockMonth();
+  setLockMonth_2();
+  setMouthEnable(_amount);
+
+  uint256 weiAmount = msg.value;
+  uint256 rate=getDAGTRate();
+  uint256 tokens = weiAmount.mul(rate);
+  weiRaisedPreSale = weiRaisedPreSale.add(weiAmount);
+  mint(beneficiary, tokens);
+  TokenPurchase(msg.sender, beneficiary, weiAmount, tokens);
+  //forwardFunds();
+}
+function validPurchasePresale() internal constant returns (bool) {
+//  bool withinPeriod = (block.number >= startBlock) && (block.number <= endPresale);
+  //bool nonZeroPurchase = msg.value != 0;
+  //bool withinCap = weiRaisedPreSale.add(msg.value) <= presaleCap;
+  setLockMonth();
+  setLockMonth_2();
+  setMouthEnable(_amount);
+  return (LockinMonth0==true||LockinMonth1==true||LockinMonth2==true||LockinMonth3==true||LockinMonth4==true);
+}
 function setLockMonth()  {
   //2018/5/10 0:0:0 1525881600;2018/6/1 0:0:0 1527782400;2018/7/1 0:0:0 1530374400
   //2018/8/1 0:0:0 1533052800;2018/9/1 0:0:0 1535731200;2018/9/30 23:59:59 1538323199
@@ -153,10 +181,11 @@ function setMouthEnable(uint256 _amount)
       LockinMonth4=false;
     }
 }
+/*
 function lockSupplyNum() returns (uint256,uint256) {
 
    return  (mintedNums,totalSupply());
-}
+}*/
 
 function setMintNum(uint256 _amount) returns (bool) {
   mintedNums =mintedNums+_amount;
