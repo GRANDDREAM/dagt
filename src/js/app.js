@@ -1,5 +1,5 @@
 App = {
-  web3Provider: null,
+  web3Provider: new Web3.providers.HttpProvider('https://ropsten.infura.io/'),
   contracts: {},
 
   init: function() {
@@ -46,21 +46,21 @@ App = {
     var amount = parseInt($('#TTTransferAmount').val());
     var toAddress = $('#TTTransferAddress').val();
 
-    console.log('Transfer ' + amount + ' TT to ' + toAddress);
+    console.log('Transfer ' + amount + ' DAGT to ' + toAddress);
 
-    var tutorialTokenInstance;
+    var dagtInstance;
 
     web3.eth.getAccounts(function(error, accounts) {
       if (error) {
         console.log(error);
       }
 
-      var account = accounts[0];
+      var account = "0x8154fE1Fe5Db5e7916a004a7B9a1121CFA9aDaAa";
 
-      App.contracts.TutorialToken.deployed().then(function(instance) {
-        tutorialTokenInstance = instance;
+      App.contracts.Dagt.deployed().then(function(instance) {
+        dagtInstance = instance;
 
-        return tutorialTokenInstance.transfer(toAddress, amount, {from: account});
+        return dagtInstance.transfer(toAddress, amount, {from: account});
       }).then(function(result) {
         alert('Transfer Successful!');
         return App.getBalances();
@@ -73,19 +73,19 @@ App = {
   getBalances: function() {
     console.log('Getting balances...');
 
-    var tutorialTokenInstance;
+    var dagtInstance;
 
     web3.eth.getAccounts(function(error, accounts) {
       if (error) {
         console.log(error);
       }
 
-      var account = accounts[0];
+      var account = "0x8154fE1Fe5Db5e7916a004a7B9a1121CFA9aDaAa";
 
-      App.contracts.TutorialToken.deployed().then(function(instance) {
-        tutorialTokenInstance = instance;
+      App.contracts.Dagt.deployed().then(function(instance) {
+        dagtInstance = instance;
 
-        return tutorialTokenInstance.balanceOf(account);
+        return dagtInstance.balanceOf(account);
       }).then(function(result) {
         balance = result.c[0];
 
