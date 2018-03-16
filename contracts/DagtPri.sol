@@ -206,6 +206,7 @@ function buyTokensPresale(address beneficiary)  payable {
   require(validPurchasePresale(tokens));
 
   mint(beneficiary, tokens);
+  setMintNum(tokens);
   TokenPurchase(msg.sender, beneficiary, weiAmount, tokens);
   //forwardFunds();
 }
@@ -348,7 +349,7 @@ function lockSupplyNum() returns (uint256,uint256) {
    return  (mintedNums,totalSupply());
 }*/
 
-function setMintNum(uint256 _amount) returns (bool) {
+function setMintNum(uint256 _amount) {
   mintedNums =mintedNums+_amount;
 }
 
