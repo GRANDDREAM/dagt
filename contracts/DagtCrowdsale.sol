@@ -13,7 +13,7 @@ contract DagtCrowdSale is CappedCrowdsale, RefundableCrowdsale {
 
     // Maximum number of tokens in circulation
     uint256 public constant MAX_TOKENS = 100000000 * TOKEN_UNIT;
-    
+
     // new rates
     uint256 public constant RATE1 = 13000;
     uint256 public constant RATE2 = 12000;
@@ -26,11 +26,14 @@ contract DagtCrowdSale is CappedCrowdsale, RefundableCrowdsale {
     uint256 public constant TIER2 =  5000 * TOKEN_UNIT;
     uint256 public constant TIER3 =  7500 * TOKEN_UNIT;
 
+   address public wallet;
 
 
-    function DagtCrowdSale(uint256 _startBlock, uint256 _endBlock, uint256 _goal, uint256 _cap, address _wallet) CappedCrowdsale(_cap) FinalizableCrowdsale() RefundableCrowdsale(_goal) Crowdsale(_startBlock, _endBlock, _wallet) public {
+    function DagtCrowdSale(uint256 _startBlock, uint256 _endBlock, uint256 _goal, uint256 _cap, address _wallet)
+     CappedCrowdsale(_cap) FinalizableCrowdsale() RefundableCrowdsale(_goal) Crowdsale(_startBlock, _endBlock, _wallet) public {
         require(_goal <= _cap);
         require(_endBlock > _startBlock);
+        wallet =_wallet;
     }
 
     function createTokenContract() internal returns (MintableToken) {
@@ -95,13 +98,115 @@ contract DagtCrowdSale is CappedCrowdsale, RefundableCrowdsale {
         require(beneficiary != 0x0);
         require(validPurchase());
 
-        uint256 weiAmount = msg.value;
-        uint256 tokens = calculateTokenAmount(weiAmount);
-        weiRaised = weiRaised.add(weiAmount);
+        uint256 rate=getDAGTRate();
 
-        token.mint(beneficiary, tokens);
+        uint256 weiAmount = msg.value;
+        uint256 ethAmount = weiAmount.div(1000000000000000000);
+        uint256 tokens = ethAmount.mul(rate);
+
+        rate =calculateAmountReward(beneficiary,ethAmount);
+
+       // 不支持小数折扣率返回值是已经乘以100，使用时再除以100
+        tokens = tokens.add((tokens.mul(rate)).div(100));
+
+        require(validPurchasePresale(tokens));
+
+        mint(beneficiary, tokens);
+        setMintNum(tokens);
         TokenPurchase(msg.sender, beneficiary, weiAmount, tokens);
         forwardFunds();
+    }
+    function calculateAmountReward(address from,uint256 eth) private returns (uint256 rewardDagt) {
+
+
+      rewardDagt=0;
+      if((now>=1521129600) && (now<=1525017599) )
+      {
+          rewardBalanceOf[from] = rewardBalanceOf[from].add(eth);
+          uint veth = rewardBalanceOf[from];
+          if(veth>=200 && veth<=299)
+          {
+            rewardDagt=5;
+
+          }else if(veth>=300 && veth<=499)
+          {
+            rewardDagt=10;
+
+          }else if(veth>=500)
+          {
+            rewardDagt=15;
+          }
+      }
+
+
+    }
+    function forwardFunds() internal {
+      wallet.transfer(msg.value);
+    }
+
+    function getDAGTRate() private returns (uint256 rate) {
+      //uint256  timeRate1_1 = 1521129600;// ToTimestamp(2018, 3, 16, 0, 0, 0);
+      //uint256  timeRate1_2 = 1521993599;// ToTimestamp(2018, 3, 25, 23, 59, 59);
+    //  require(timeRate1_1 >= initTimeStamp);
+      //transfer(msg.sender, 0);
+      //uint256 startNumbers_1 = (1521129600-initTimeStamp)/15;
+      //uint256 endNumbers_1 =(1521993599-initTimeStamp)/15;
+
+      //2018.3.26~2018.4.4
+      //  uint256  timeRate2_1 = 1521993600;
+     //  uint256  timeRate2_2 = 1522771199;
+      //uint256 startNumbers_2 = (1521993600-initTimeStamp)/15;
+      //uint256 endNumbers_2 =(1522771199-initTimeStamp)/15;
+
+      //2018.4.5~2018.4.14
+      //uint256  timeRate3_1 = 1522857600;
+     //  uint256  timeRate3_2 = 1523635199;
+
+      //uint256 startNumbers_3 = (1522857600-initTimeStamp)/15;
+      //uint256 endNumbers_3 =(1523635199-initTimeStamp)/15;
+
+      //2018.4.15~2018.4.24
+      //uint256  timeRate4_1 = 1523721600;
+      //uint256  timeRate4_2 = 1524499199;
+      //uint256 startNumbers_4 = (1523721600-initTimeStamp)/15;
+      //uint256 endNumbers_4 =(1524499199-initTimeStamp)/15;
+
+      //2018.4.26—2018.4.30
+      //uint256  timeRate5_1 = 1524672000;
+      //uint256  timeRate5_2 = 1525017599;
+
+    //  uint256 startNumbers_5 = (1524672000-initTimeStamp)/15;
+      //uint256 endNumbers_5 =(1525017599-initTimeStamp)/15;
+      rate = 0;
+    /* */
+      /*if((block.number>=startNumbers_1) && (block.number<=endNumbers_1) )
+      {
+          rate = RATE1;
+      }else if((block.number>=startNumbers_2) && (block.number<=endNumbers_2))
+      {
+          rate = RATE2;*/
+      if((now>=1521129600) && (now<=1521993599) )
+       {
+         rate = RATE1;
+       }else if((now>=1521993600) && (now<=1522771199) )
+      {
+          rate = RATE2;
+      }else if((now>=1522857600) && (now<=1523635199) )
+      {
+        rate = RATE3;
+      }else if((now>=1523721600) && (now<=1524499199) )
+      {
+        rate = RATE4;
+      }else if((now>=1524672000) && (now<=1525017599) )
+      {
+        rate = RATE5;
+      }else
+      {
+      //  throw;
+      }
+    //  blocktime = block.timestamp;
+    //  blocknum = block.number;
+      //return rate;
     }
 
     // calculate the amount of token the user is getting - can overlap on multiple tiers.
@@ -155,7 +260,7 @@ contract DagtCrowdSale is CappedCrowdsale, RefundableCrowdsale {
         uint256 totalSupply = token.totalSupply();
         // total supply
         token.mint(wallet, MAX_TOKENS.sub(totalSupply));
-        
+
         token.finishMinting();
         }
         super.finalization();
