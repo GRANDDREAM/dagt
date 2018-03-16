@@ -4,36 +4,26 @@
 //   networks: {
 //     development: {
 //       host: "127.0.0.1",
-//       port: 8545,
+//       port: 7545,
 //       network_id: "*" // Match any network id
 //     }
 //   }
 // };
 
-// module.exports = {
-//   networks: {
-//     development: {
-//       host: "localhost",
-//       port: 8545,
-//       network_id: "*" // Match any network id
-//     },
-//      ropsten:  {
-//      network_id: 3,
-//      host: "localhost",
-//      port:  8545,
-//      gas:   2900000
-//     }
-//   },
-//   rpc: {
-//     host: 'localhost',
-//     post:8080
-//   }
-// };
+require('dotenv').config();
+const Web3 = require("web3");
+const web3 = new Web3();
+const WalletProvider = require("truffle-wallet-provider");
+const Wallet = require('ethereumjs-wallet');
 
-var HDWalletProvider = require("truffle-hdwallet-provider");
+var mainNetPrivateKey = new Buffer(process.env["MAINNET_PRIVATE_KEY"], "hex")
+var mainNetWallet = Wallet.fromPrivateKey(mainNetPrivateKey);
+var mainNetProvider = new WalletProvider(mainNetWallet, "https://mainnet.infura.io/");
 
-var infura_apikey = "yXxYEFUojdEzpVGtkz0v";
-var mnemonic = "rely skin athlete acoustic slight later improve blue brass party voice priority";
+var ropstenPrivateKey = new Buffer(process.env["ROPSTEN_PRIVATE_KEY"], "hex")
+var ropstenWallet = Wallet.fromPrivateKey(ropstenPrivateKey);
+var ropstenProvider = new WalletProvider(ropstenWallet, "https://ropsten.infura.io/");
+
 
 module.exports = {
   networks: {
@@ -43,9 +33,16 @@ module.exports = {
       network_id: "*" // Match any network id
     },
     ropsten: {
-      provider: new HDWalletProvider(mnemonic, "https://ropsten.infura.io/"+infura_apikey),
-      network_id: 3,
-      gas:   3900000
+      provider: ropstenProvider,
+      gas: 4600000,
+      gasPrice: web3.toWei("20", "gwei"),
+      network_id: "3",
+    },
+    mainnet: {
+      provider: mainNetProvider,
+      gas: 4600000,
+      gasPrice: web3.toWei("20", "gwei"),
+      network_id: "1",
     }
   }
 };
