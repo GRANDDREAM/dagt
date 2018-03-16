@@ -4,14 +4,6 @@ import "zeppelin-solidity/contracts/token/ERC20/MintableToken.sol";
 
 contract Dagt is MintableToken {
     string public constant version = "1.0";
-    // DAGT token unit.
-    // Using same decimal value as ETH (makes ETH-DAGT conversion much easier).
-    // This is the same as in DAGT token contract.
-    uint256 public constant TOKEN_UNIT = 10 ** 18;
-
-    // Maximum number of tokens in circulation
-    uint256 public constant MAX_TOKENS = 100000000 * TOKEN_UNIT;
-
     string public constant name = "DAGT Crypto Platform";
     string public constant symbol = "DAGT";
     uint8 public constant decimals = 18;
