@@ -25,24 +25,28 @@ contract DagtCrowdSale is CappedCrowdsale, RefundableCrowdsale {
     uint256 public constant TIER1 =  3000 * TOKEN_UNIT;
     uint256 public constant TIER2 =  5000 * TOKEN_UNIT;
     uint256 public constant TIER3 =  7500 * TOKEN_UNIT;
-
-   address public wallet;
+    uint256 public mintedNums;
+    mapping (address => uint256) public rewardBalanceOf;
+    //white listed address
+    mapping (address => bool) public whiteListedAddress;
+    mapping (address => bool) public whiteListedAddressPresale;
 
 
     function DagtCrowdSale(uint256 _startBlock, uint256 _endBlock, uint256 _goal, uint256 _cap, address _wallet)
      CappedCrowdsale(_cap) FinalizableCrowdsale() RefundableCrowdsale(_goal) Crowdsale(_startBlock, _endBlock, _wallet) public {
         require(_goal <= _cap);
         require(_endBlock > _startBlock);
+        startBlock = _startBlock;
+        endBlock = _endBlock;
         wallet =_wallet;
+
     }
 
     function createTokenContract() internal returns (MintableToken) {
         return new Dagt();
     }
 
-    //white listed address
-    mapping (address => bool) public whiteListedAddress;
-    mapping (address => bool) public whiteListedAddressPresale;
+
 
     modifier onlyPresaleWhitelisted() {
         require( isWhitelistedPresale(msg.sender) ) ;
@@ -140,9 +144,7 @@ contract DagtCrowdSale is CappedCrowdsale, RefundableCrowdsale {
 
 
     }
-    function forwardFunds() internal {
-      wallet.transfer(msg.value);
-    }
+
 
     function getDAGTRate() private returns (uint256 rate) {
       //uint256  timeRate1_1 = 1521129600;// ToTimestamp(2018, 3, 16, 0, 0, 0);
@@ -208,7 +210,7 @@ contract DagtCrowdSale is CappedCrowdsale, RefundableCrowdsale {
     //  blocknum = block.number;
       //return rate;
     }
-
+/*
     // calculate the amount of token the user is getting - can overlap on multiple tiers.
     function calculateTokenAmount(uint256 weiAmount) internal returns (uint256) {
         uint256 amountToBuy = weiAmount;
@@ -252,7 +254,7 @@ contract DagtCrowdSale is CappedCrowdsale, RefundableCrowdsale {
         amountBoughtInTier = amountToBuy.mul(rate);
         return (amountBoughtInTier,0);
         }
-    }
+    }*/
 
     function finalization() internal {
         if (goalReached()) {
@@ -264,6 +266,12 @@ contract DagtCrowdSale is CappedCrowdsale, RefundableCrowdsale {
         token.finishMinting();
         }
         super.finalization();
+    }
+
+    function setMintNum(uint256 _amount) public returns (bool ret) {
+
+      mintedNums =mintedNums+_amount;
+
     }
 
 }
