@@ -145,6 +145,118 @@ contract DagtCrowdSale is CappedCrowdsale, RefundableCrowdsale {
 
     }
 
+    function validPurchasePresale(uint256 _amount) internal constant returns (bool) {
+    //  bool withinPeriod = (block.number >= startBlock) && (block.number <= endPresale);
+      //bool nonZeroPurchase = msg.value != 0;
+      //bool withinCap = weiRaisedPreSale.add(msg.value) <= presaleCap;
+      setLockMonth();
+      setLockMonth_2();
+      setMouthEnable(_amount);
+      return (LockinMonth0==true||LockinMonth1==true||LockinMonth2==true||LockinMonth3==true||LockinMonth4==true);
+    }
+
+    function setLockMonth()  {
+      //2018/5/1 0:0:0 1525104000;2018/6/1 0:0:0 1527782400;2018/7/1 0:0:0 1530374400
+      //2018/8/1 0:0:0 1533052800;2018/9/1 0:0:0 1535731200;2018/9/30 23:59:59 1538323199
+      int256 blockHight = block.number;
+      // 2018.3.16 1521129600,blockHight:2840652
+      //
+      if((blockHight< 3156080) && (LockinMonth0==false))
+      {
+
+        LockinMonth1=false;
+        LockinMonth2=false;
+        LockinMonth3=false;
+        LockinMonth4=false;
+        LockinMonth0 = true;
+        mintedNums=0;
+      }
+      if((blockHight< 3156080) && (LockinMonth0==true) && (mintedNums>LOCK_NUMS_SUPPLY))
+      {
+        LockinMonth0 = false;
+      }
+       //e
+        if( (blockHight >=3156080) && (blockHight< 3217795) && (LockinMonth1==false))
+        {
+          LockinMonth0 = false;
+          LockinMonth2=false;
+          LockinMonth3=false;
+          LockinMonth4=false;
+          LockinMonth1 = true;
+          mintedNums=0;
+        }
+        if( (blockHight >=3156080) && (blockHight< 3217795) && (LockinMonth1==true) && (mintedNums>LOCK_NUMS_SUPPLY))
+        {
+          LockinMonth1 = false;
+        }
+        //
+        if( (blockHight >=3217795) && (blockHight< 3574366) && (LockinMonth2==false))
+        {
+          LockinMonth0 = false;
+          LockinMonth1=false;
+          LockinMonth3=false;
+          LockinMonth4=false;
+          LockinMonth2 = true;
+          mintedNums=0;
+        }
+        if((blockHight >=3217795) && (blockHight< 3574366) && (LockinMonth2==true) && (mintedNums>LOCK_NUMS_SUPPLY))
+        {
+          LockinMonth2 = false;
+        }
+
+
+      //  return (now,LockinMonth0,LockinMonth1,LockinMonth2,LockinMonth3,LockinMonth4);
+
+    }
+
+    function setLockMonth_2 ()
+    {
+      //2018/5/1 0:0:0 1525104000;2018/6/1 0:0:0 1527782400;2018/7/1 0:0:0 1530374400
+      //2018/8/1 0:0:0 1533052800;2018/9/1 0:0:0 1535731200;2018/9/30 23:59:59 1538323199
+      int256 blockHight = block.number;
+       if( (blockHight >=3574366) && (blockHight< 3786938) && (LockinMonth3==false))
+        {
+          LockinMonth0 = false;
+          LockinMonth1=false;
+          LockinMonth2=false;
+          LockinMonth4=false;
+          LockinMonth3 = true;
+          mintedNums=0;
+        }
+        if( (blockHight >=3574366) && (blockHight< 3786938) && (LockinMonth3==true) && (mintedNums>LOCK_NUMS_SUPPLY))
+        {
+          LockinMonth3 = false;
+        }
+        //
+        if( blockHight >=3786938 && blockHight< 3963509 && LockinMonth4==false)
+        {
+          LockinMonth0 = false;
+          LockinMonth1=false;
+          LockinMonth2=false;
+          LockinMonth3=false;
+
+          LockinMonth4 = true;
+          mintedNums=0;
+        }
+        if(blockHight >=3963509 && blockHight< 4205223 && LockinMonth4==true && mintedNums>LOCK_NUMS_SUPPLY)
+        {
+          LockinMonth4 = false;
+        }
+
+
+    }
+
+    function setMouthEnable(uint256 _amount)
+    {
+        if((mintedNums+_amount)>LOCK_NUMS_SUPPLY)
+        {
+          LockinMonth0 = false;
+          LockinMonth1=false;
+          LockinMonth2=false;
+          LockinMonth3=false;
+          LockinMonth4=false;
+        }
+    }
 
     function getDAGTRate() private returns (uint256 rate) {
       //uint256  timeRate1_1 = 1521129600;// ToTimestamp(2018, 3, 16, 0, 0, 0);
@@ -268,7 +380,7 @@ contract DagtCrowdSale is CappedCrowdsale, RefundableCrowdsale {
         super.finalization();
     }
 
-    function setMintNum(uint256 _amount) public returns (bool ret) {
+    function setOnceLockNum(uint256 _amount) public returns (bool ret) {
 
       mintedNums =mintedNums+_amount;
 
