@@ -5,7 +5,8 @@ import "./crowdsale/CappedCrowdsale.sol";
 import "./crowdsale/RefundableCrowdsale.sol";
 import './Dagt.sol';
 
-contract DagtCrowdSale is CappedCrowdsale, RefundableCrowdsale {
+//contract DagtCrowdSale is CappedCrowdsale, RefundableCrowdsale {
+contract DagtCrowdSale is Dagt,CappedCrowdsale, RefundableCrowdsale {
     // DAGT token unit.
     // Using same decimal value as ETH (makes ETH-DAGT conversion much easier).
     // This is the same as in DAGT token contract.
@@ -13,12 +14,19 @@ contract DagtCrowdSale is CappedCrowdsale, RefundableCrowdsale {
 
     // Maximum number of tokens in circulation
     uint256 public constant MAX_TOKENS = 100000000 * TOKEN_UNIT;
-
+    uint256 public constant LOCK_NUMS_SUPPLY = 20000000;
     // new rates
-    uint256 public constant RATE1 = 13000;
-    uint256 public constant RATE2 = 12000;
-    uint256 public constant RATE3 = 11000;
-    uint256 public constant RATE4 = 10000;
+    uint256 public constant RATE1 = 1700;
+    uint256 public constant RATE2 = 1600;
+    uint256 public constant RATE3 = 1400;
+    uint256 public constant RATE4 = 1240;
+    uint256 public constant RATE5 = 1118;
+
+    bool private LockinMonth0=false;
+    bool private LockinMonth1=false;
+    bool private LockinMonth2=false;
+    bool private LockinMonth3=false;
+    bool private LockinMonth4=false;
 
 
     // Cap per tier for bonus in wei.
@@ -31,14 +39,21 @@ contract DagtCrowdSale is CappedCrowdsale, RefundableCrowdsale {
     mapping (address => bool) public whiteListedAddress;
     mapping (address => bool) public whiteListedAddressPresale;
 
+/*
+    uint256 public startBlock;
+    uint256 public endBlock;
+
+    // address where funds are collected
+    address public wallet;*/
+
 
     function DagtCrowdSale(uint256 _startBlock, uint256 _endBlock, uint256 _goal, uint256 _cap, address _wallet)
      CappedCrowdsale(_cap) FinalizableCrowdsale() RefundableCrowdsale(_goal) Crowdsale(_startBlock, _endBlock, _wallet) public {
         require(_goal <= _cap);
         require(_endBlock > _startBlock);
-        startBlock = _startBlock;
-        endBlock = _endBlock;
-        wallet =_wallet;
+      //  startBlock = _startBlock;
+      //  endBlock = _endBlock;
+      //  wallet =_wallet;
 
     }
 
@@ -113,13 +128,14 @@ contract DagtCrowdSale is CappedCrowdsale, RefundableCrowdsale {
        // 不支持小数折扣率返回值是已经乘以100，使用时再除以100
         tokens = tokens.add((tokens.mul(rate)).div(100));
 
+        //为了锁仓计算
+        setOnceLockNum(tokens);
         require(validPurchasePresale(tokens));
-
-        mint(beneficiary, tokens);
-        setMintNum(tokens);
+        token.mint(beneficiary, tokens);
         TokenPurchase(msg.sender, beneficiary, weiAmount, tokens);
         forwardFunds();
     }
+
     function calculateAmountReward(address from,uint256 eth) private returns (uint256 rewardDagt) {
 
 
@@ -158,7 +174,7 @@ contract DagtCrowdSale is CappedCrowdsale, RefundableCrowdsale {
     function setLockMonth()  {
       //2018/5/1 0:0:0 1525104000;2018/6/1 0:0:0 1527782400;2018/7/1 0:0:0 1530374400
       //2018/8/1 0:0:0 1533052800;2018/9/1 0:0:0 1535731200;2018/9/30 23:59:59 1538323199
-      int256 blockHight = block.number;
+      uint blockHight = block.number;
       // 2018.3.16 1521129600,blockHight:2840652
       //
       if((blockHight< 3156080) && (LockinMonth0==false))
@@ -213,7 +229,7 @@ contract DagtCrowdSale is CappedCrowdsale, RefundableCrowdsale {
     {
       //2018/5/1 0:0:0 1525104000;2018/6/1 0:0:0 1527782400;2018/7/1 0:0:0 1530374400
       //2018/8/1 0:0:0 1533052800;2018/9/1 0:0:0 1535731200;2018/9/30 23:59:59 1538323199
-      int256 blockHight = block.number;
+      uint blockHight = block.number;
        if( (blockHight >=3574366) && (blockHight< 3786938) && (LockinMonth3==false))
         {
           LockinMonth0 = false;
@@ -291,6 +307,8 @@ contract DagtCrowdSale is CappedCrowdsale, RefundableCrowdsale {
 
     //  uint256 startNumbers_5 = (1524672000-initTimeStamp)/15;
       //uint256 endNumbers_5 =(1525017599-initTimeStamp)/15;
+
+     uint blockHight = block.number;
       rate = 0;
     /* */
       /*if((block.number>=startNumbers_1) && (block.number<=endNumbers_1) )
@@ -299,19 +317,19 @@ contract DagtCrowdSale is CappedCrowdsale, RefundableCrowdsale {
       }else if((block.number>=startNumbers_2) && (block.number<=endNumbers_2))
       {
           rate = RATE2;*/
-      if((now>=1521129600) && (now<=1521993599) )
+      if((blockHight>=2840652) && (blockHight<=2908683) )
        {
          rate = RATE1;
-       }else if((now>=1521993600) && (now<=1522771199) )
+       }else if((blockHight>2908683) && (blockHight<=2970937) )
       {
           rate = RATE2;
-      }else if((now>=1522857600) && (now<=1523635199) )
+      }else if((blockHight>2970937) && (blockHight<=3039509) )
       {
         rate = RATE3;
-      }else if((now>=1523721600) && (now<=1524499199) )
+      }else if((blockHight>3039509) && (blockHight<=3108080) )
       {
         rate = RATE4;
-      }else if((now>=1524672000) && (now<=1525017599) )
+      }else if((blockHight>3108080) && (blockHight<=3149223) )
       {
         rate = RATE5;
       }else
