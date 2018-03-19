@@ -136,7 +136,7 @@ contract DagtCrowdSale is Dagt,CappedCrowdsale, RefundableCrowdsale {
         {
             DAGTlist[beneficiary][buyNo].transCount = 1;
         }
-        personBuyTimes[beneficiary] = buyNo+1;
+        personBuyTimes[beneficiary] = buyNo.add(1);
 
         TokenPurchase(msg.sender, beneficiary, weiAmount, transDagts);
         forwardFunds();
