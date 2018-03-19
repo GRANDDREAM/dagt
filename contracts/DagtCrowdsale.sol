@@ -45,8 +45,8 @@ contract DagtCrowdSale is Dagt,CappedCrowdsale, RefundableCrowdsale {
      CappedCrowdsale(_cap) FinalizableCrowdsale() RefundableCrowdsale(_goal) Crowdsale(_startBlock, _endBlock, _wallet) public {
         require(_goal <= _cap);
         require(_endBlock > _startBlock);
-      //  startBlock = _startBlock;
-      //  endBlock = _endBlock;
+        startBlock = _startBlock;
+        endBlock = _endBlock;
         wallet =_wallet;
 
     }
