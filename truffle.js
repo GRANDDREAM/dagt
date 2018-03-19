@@ -26,6 +26,16 @@ var ropstenProvider = new WalletProvider(ropstenWallet, "https://ropsten.infura.
 
 
 module.exports = {
+  build: {
+    "index.html": "index.html",
+    "app.js": [
+      "javascripts/app.js"
+    ],
+    "app.css": [
+      "stylesheets/app.css"
+    ],
+    "images/": "images/"
+  },
   networks: {
     development: {
       host: "localhost",
@@ -44,5 +54,8 @@ module.exports = {
       gasPrice: web3.toWei("20", "gwei"),
       network_id: "1",
     }
+  
   }
 };
+
+
