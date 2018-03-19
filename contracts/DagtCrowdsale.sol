@@ -21,30 +21,27 @@ contract DagtCrowdSale is Dagt,CappedCrowdsale, RefundableCrowdsale {
     uint256 public constant RATE3 = 1400;
     uint256 public constant RATE4 = 1240;
     uint256 public constant RATE5 = 1118;
-
-    bool private LockinMonth0=false;
-    bool private LockinMonth1=false;
-    bool private LockinMonth2=false;
-    bool private LockinMonth3=false;
-    bool private LockinMonth4=false;
-
+     //1ETH = 1118DAGT
+    uint256 public constant DAGTEXCHANGE = 1118;
 
     // Cap per tier for bonus in wei.
     uint256 public constant TIER1 =  3000 * TOKEN_UNIT;
     uint256 public constant TIER2 =  5000 * TOKEN_UNIT;
     uint256 public constant TIER3 =  7500 * TOKEN_UNIT;
-    uint256 public mintedNums;
+
     mapping (address => uint256) public rewardBalanceOf;
     //white listed address
     mapping (address => bool) public whiteListedAddress;
     mapping (address => bool) public whiteListedAddressPresale;
 
-/*
-    uint256 public startBlock;
-    uint256 public endBlock;
+    struct LockNUmPerson {
+        uint256 totalDAGTNums;
+        //mapping (uint => uint256) lockNums;
+        uint256 transCount;//转账计数 0.第一个月...4.第五个月 大于四已经转完
+        address peronAddr;
+      }
 
-    // address where funds are collected
-    address public wallet;*/
+    LockNUmPerson personDAGTData;
 
 
     function DagtCrowdSale(uint256 _startBlock, uint256 _endBlock, uint256 _goal, uint256 _cap, address _wallet)
@@ -115,199 +112,81 @@ contract DagtCrowdSale is Dagt,CappedCrowdsale, RefundableCrowdsale {
 
     function buyTokens(address beneficiary) public payable onlyWhitelisted {
         require(beneficiary != 0x0);
-        require(validPurchase());
+        //require(validPurchase());
 
         uint256 rate=getDAGTRate();
 
         uint256 weiAmount = msg.value;
         uint256 ethAmount = weiAmount.div(1000000000000000000);
-        uint256 tokens = ethAmount.mul(rate);
+        uint256 tokensDAGT = ethAmount.mul(rate);
 
-        rate =calculateAmountReward(beneficiary,ethAmount);
+        personDAGTData.totalDAGTNums = tokensDAGT;
+        personDAGTData.transCount = 0;
+        personDAGTData.peronAddr = beneficiary;
+        rate =amountReward(tokensDAGT);
+        uint256 transDagts =tokensDAGT.mul(20).div(100);
+        if(personDAGTData.transCount==0)
+        {
+          transDagts = transDagts.add(rate);
 
-       // 不支持小数折扣率返回值是已经乘以100，使用时再除以100
-        tokens = tokens.add((tokens.mul(rate)).div(100));
-
-        //为了锁仓计算
-        setOnceLockNum(tokens);
-        require(validPurchasePresale(tokens));
-        token.mint(beneficiary, tokens);
-        TokenPurchase(msg.sender, beneficiary, weiAmount, tokens);
+        }
+        bool ret =  token.mint(beneficiary, transDagts);
+        if(ret==true)
+        {
+            personDAGTData.transCount = personDAGTData.transCount.add(1);
+        }
+        TokenPurchase(msg.sender, beneficiary, weiAmount, transDagts);
         forwardFunds();
+
+    }
+    //锁仓后每月转账接口
+    function transDagt(address to) public returns(bool success) {
+
+      bool ret=false;
+      require(to != 0x0);
+      uint256 trans_Value =0;
+      if(personDAGTData.transCount>0 && personDAGTData.transCount<5)
+      {
+        trans_Value =personDAGTData.totalDAGTNums.mul(20).div(100);
+      }
+
+      ret = token.transfer(to, trans_Value);
+      TokenPurchase(msg.sender, to, 0, trans_Value);
+      if(ret == true)
+      {
+        personDAGTData.transCount = personDAGTData.transCount.add(1);
+      }
+      return ret;
+
     }
 
-    function calculateAmountReward(address from,uint256 eth) private returns (uint256 rewardDagt) {
+    function amountReward(uint256 dagts) private returns (uint256 rewardDagts) {
 
-
-      rewardDagt=0;
-      if((now>=1521129600) && (now<=1525017599) )
+      rewardDagts=0;
+      uint256 blockHight = block.number;
+      if((blockHight>=2840652) && (blockHight<=3149223) )
       {
-          rewardBalanceOf[from] = rewardBalanceOf[from].add(eth);
-          uint veth = rewardBalanceOf[from];
-          if(veth>=200 && veth<=299)
-          {
-            rewardDagt=5;
+          //rewardBalanceOf[from] = rewardBalanceOf[from].add(eth);
 
-          }else if(veth>=300 && veth<=499)
+          if(dagts>=DAGTEXCHANGE.mul(200) && dagts<=DAGTEXCHANGE.mul(299))
           {
-            rewardDagt=10;
+            // 不支持小数折扣率返回值是已经乘以100，使用时再除以100
+            rewardDagts=(dagts.mul(5)).div(100);
 
-          }else if(veth>=500)
+          }else if(dagts>=DAGTEXCHANGE.mul(300) && dagts<=DAGTEXCHANGE.mul(499))
           {
-            rewardDagt=15;
+            rewardDagts=(dagts.mul(10)).div(100);
+
+          }else if(dagts>=DAGTEXCHANGE.mul(500))
+          {
+            rewardDagts=(dagts.mul(15)).div(100);
           }
       }
 
 
     }
 
-    function validPurchasePresale(uint256 _amount) internal constant returns (bool) {
-    //  bool withinPeriod = (block.number >= startBlock) && (block.number <= endPresale);
-      //bool nonZeroPurchase = msg.value != 0;
-      //bool withinCap = weiRaisedPreSale.add(msg.value) <= presaleCap;
-      setLockMonth();
-      setLockMonth_2();
-      setMouthEnable(_amount);
-      return (LockinMonth0==true||LockinMonth1==true||LockinMonth2==true||LockinMonth3==true||LockinMonth4==true);
-    }
-
-    function setLockMonth()  {
-      //2018/5/1 0:0:0 1525104000;2018/6/1 0:0:0 1527782400;2018/7/1 0:0:0 1530374400
-      //2018/8/1 0:0:0 1533052800;2018/9/1 0:0:0 1535731200;2018/9/30 23:59:59 1538323199
-      uint blockHight = block.number;
-      // 2018.3.16 1521129600,blockHight:2840652
-      //
-      if((blockHight< 3156080) && (LockinMonth0==false))
-      {
-
-        LockinMonth1=false;
-        LockinMonth2=false;
-        LockinMonth3=false;
-        LockinMonth4=false;
-        LockinMonth0 = true;
-        mintedNums=0;
-      }
-      if((blockHight< 3156080) && (LockinMonth0==true) && (mintedNums>LOCK_NUMS_SUPPLY))
-      {
-        LockinMonth0 = false;
-      }
-       //e
-        if( (blockHight >=3156080) && (blockHight< 3217795) && (LockinMonth1==false))
-        {
-          LockinMonth0 = false;
-          LockinMonth2=false;
-          LockinMonth3=false;
-          LockinMonth4=false;
-          LockinMonth1 = true;
-          mintedNums=0;
-        }
-        if( (blockHight >=3156080) && (blockHight< 3217795) && (LockinMonth1==true) && (mintedNums>LOCK_NUMS_SUPPLY))
-        {
-          LockinMonth1 = false;
-        }
-        //
-        if( (blockHight >=3217795) && (blockHight< 3574366) && (LockinMonth2==false))
-        {
-          LockinMonth0 = false;
-          LockinMonth1=false;
-          LockinMonth3=false;
-          LockinMonth4=false;
-          LockinMonth2 = true;
-          mintedNums=0;
-        }
-        if((blockHight >=3217795) && (blockHight< 3574366) && (LockinMonth2==true) && (mintedNums>LOCK_NUMS_SUPPLY))
-        {
-          LockinMonth2 = false;
-        }
-
-
-      //  return (now,LockinMonth0,LockinMonth1,LockinMonth2,LockinMonth3,LockinMonth4);
-
-    }
-
-    function setLockMonth_2 ()
-    {
-      //2018/5/1 0:0:0 1525104000;2018/6/1 0:0:0 1527782400;2018/7/1 0:0:0 1530374400
-      //2018/8/1 0:0:0 1533052800;2018/9/1 0:0:0 1535731200;2018/9/30 23:59:59 1538323199
-      uint blockHight = block.number;
-       if( (blockHight >=3574366) && (blockHight< 3786938) && (LockinMonth3==false))
-        {
-          LockinMonth0 = false;
-          LockinMonth1=false;
-          LockinMonth2=false;
-          LockinMonth4=false;
-          LockinMonth3 = true;
-          mintedNums=0;
-        }
-        if( (blockHight >=3574366) && (blockHight< 3786938) && (LockinMonth3==true) && (mintedNums>LOCK_NUMS_SUPPLY))
-        {
-          LockinMonth3 = false;
-        }
-        //
-        if( blockHight >=3786938 && blockHight< 3963509 && LockinMonth4==false)
-        {
-          LockinMonth0 = false;
-          LockinMonth1=false;
-          LockinMonth2=false;
-          LockinMonth3=false;
-
-          LockinMonth4 = true;
-          mintedNums=0;
-        }
-        if(blockHight >=3963509 && blockHight< 4205223 && LockinMonth4==true && mintedNums>LOCK_NUMS_SUPPLY)
-        {
-          LockinMonth4 = false;
-        }
-
-
-    }
-
-    function setMouthEnable(uint256 _amount)
-    {
-        if((mintedNums+_amount)>LOCK_NUMS_SUPPLY)
-        {
-          LockinMonth0 = false;
-          LockinMonth1=false;
-          LockinMonth2=false;
-          LockinMonth3=false;
-          LockinMonth4=false;
-        }
-    }
-
     function getDAGTRate() private returns (uint256 rate) {
-      //uint256  timeRate1_1 = 1521129600;// ToTimestamp(2018, 3, 16, 0, 0, 0);
-      //uint256  timeRate1_2 = 1521993599;// ToTimestamp(2018, 3, 25, 23, 59, 59);
-    //  require(timeRate1_1 >= initTimeStamp);
-      //transfer(msg.sender, 0);
-      //uint256 startNumbers_1 = (1521129600-initTimeStamp)/15;
-      //uint256 endNumbers_1 =(1521993599-initTimeStamp)/15;
-
-      //2018.3.26~2018.4.4
-      //  uint256  timeRate2_1 = 1521993600;
-     //  uint256  timeRate2_2 = 1522771199;
-      //uint256 startNumbers_2 = (1521993600-initTimeStamp)/15;
-      //uint256 endNumbers_2 =(1522771199-initTimeStamp)/15;
-
-      //2018.4.5~2018.4.14
-      //uint256  timeRate3_1 = 1522857600;
-     //  uint256  timeRate3_2 = 1523635199;
-
-      //uint256 startNumbers_3 = (1522857600-initTimeStamp)/15;
-      //uint256 endNumbers_3 =(1523635199-initTimeStamp)/15;
-
-      //2018.4.15~2018.4.24
-      //uint256  timeRate4_1 = 1523721600;
-      //uint256  timeRate4_2 = 1524499199;
-      //uint256 startNumbers_4 = (1523721600-initTimeStamp)/15;
-      //uint256 endNumbers_4 =(1524499199-initTimeStamp)/15;
-
-      //2018.4.26—2018.4.30
-      //uint256  timeRate5_1 = 1524672000;
-      //uint256  timeRate5_2 = 1525017599;
-
-    //  uint256 startNumbers_5 = (1524672000-initTimeStamp)/15;
-      //uint256 endNumbers_5 =(1525017599-initTimeStamp)/15;
-
      uint blockHight = block.number;
       rate = 0;
     /* */
@@ -396,12 +275,6 @@ contract DagtCrowdSale is Dagt,CappedCrowdsale, RefundableCrowdsale {
         token.finishMinting();
         }
         super.finalization();
-    }
-
-    function setOnceLockNum(uint256 _amount) public returns (bool ret) {
-
-      mintedNums =mintedNums+_amount;
-
     }
 
 }
