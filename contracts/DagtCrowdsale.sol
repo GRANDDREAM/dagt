@@ -29,28 +29,25 @@ contract DagtCrowdSale is Dagt,CappedCrowdsale, RefundableCrowdsale {
     uint256 public constant TIER2 =  5000 * TOKEN_UNIT;
     uint256 public constant TIER3 =  7500 * TOKEN_UNIT;
 
-    mapping (address => uint256) public rewardBalanceOf;
     //white listed address
     mapping (address => bool) public whiteListedAddress;
     mapping (address => bool) public whiteListedAddressPresale;
 
     struct LockNUmPerson {
         uint256 totalDAGTNums;
-        //mapping (uint => uint256) lockNums;
         uint256 transCount;//转账计数 0.第一个月...4.第五个月 大于四已经转完
-        address peronAddr;
       }
 
-    LockNUmPerson personDAGTData;
+    mapping (address => LockNUmPerson) DAGTlist;
 
-
+    //2845788, 4845788, 20000000000000000000000000, 20000000000000000000000000,  100000000000000000000000000, "0x627306090abaB3A6e1400e9345bC60c78a8BEf57"
     function DagtCrowdSale(uint256 _startBlock, uint256 _endBlock, uint256 _goal, uint256 _cap, address _wallet)
      CappedCrowdsale(_cap) FinalizableCrowdsale() RefundableCrowdsale(_goal) Crowdsale(_startBlock, _endBlock, _wallet) public {
         require(_goal <= _cap);
         require(_endBlock > _startBlock);
       //  startBlock = _startBlock;
       //  endBlock = _endBlock;
-      //  wallet =_wallet;
+        wallet =_wallet;
 
     }
 
@@ -120,12 +117,12 @@ contract DagtCrowdSale is Dagt,CappedCrowdsale, RefundableCrowdsale {
         uint256 ethAmount = weiAmount.div(1000000000000000000);
         uint256 tokensDAGT = ethAmount.mul(rate);
 
-        personDAGTData.totalDAGTNums = tokensDAGT;
-        personDAGTData.transCount = 0;
-        personDAGTData.peronAddr = beneficiary;
+        DAGTlist[beneficiary].totalDAGTNums = tokensDAGT;
+        DAGTlist[beneficiary].transCount = 0;
+
         rate =amountReward(tokensDAGT);
         uint256 transDagts =tokensDAGT.mul(20).div(100);
-        if(personDAGTData.transCount==0)
+        if(DAGTlist[beneficiary].transCount==0)
         {
           transDagts = transDagts.add(rate);
 
@@ -133,8 +130,9 @@ contract DagtCrowdSale is Dagt,CappedCrowdsale, RefundableCrowdsale {
         bool ret =  token.mint(beneficiary, transDagts);
         if(ret==true)
         {
-            personDAGTData.transCount = personDAGTData.transCount.add(1);
+            DAGTlist[beneficiary].transCount = DAGTlist[beneficiary].transCount.add(1);
         }
+
         TokenPurchase(msg.sender, beneficiary, weiAmount, transDagts);
         forwardFunds();
 
@@ -145,16 +143,16 @@ contract DagtCrowdSale is Dagt,CappedCrowdsale, RefundableCrowdsale {
       bool ret=false;
       require(to != 0x0);
       uint256 trans_Value =0;
-      if(personDAGTData.transCount>0 && personDAGTData.transCount<5)
+      if(  DAGTlist[to].transCount>0 && DAGTlist[to].transCount<5)
       {
-        trans_Value =personDAGTData.totalDAGTNums.mul(20).div(100);
+        trans_Value =DAGTlist[to].totalDAGTNums.mul(20).div(100);
       }
 
       ret = token.transfer(to, trans_Value);
       TokenPurchase(msg.sender, to, 0, trans_Value);
       if(ret == true)
       {
-        personDAGTData.transCount = personDAGTData.transCount.add(1);
+        DAGTlist[to].transCount = DAGTlist[to].transCount.add(1);
       }
       return ret;
 
@@ -166,8 +164,6 @@ contract DagtCrowdSale is Dagt,CappedCrowdsale, RefundableCrowdsale {
       uint256 blockHight = block.number;
       if((blockHight>=2840652) && (blockHight<=3149223) )
       {
-          //rewardBalanceOf[from] = rewardBalanceOf[from].add(eth);
-
           if(dagts>=DAGTEXCHANGE.mul(200) && dagts<=DAGTEXCHANGE.mul(299))
           {
             // 不支持小数折扣率返回值是已经乘以100，使用时再除以100
