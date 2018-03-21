@@ -1,7 +1,13 @@
-var DagtCrowdsale = artifacts.require("./DagtCrowdsale.sol");
 
+var DagtCrowdsale = artifacts.require("./DagtCrowdsale.sol");
 contract('DagtCrowdsale', function(accounts) {
     accounts[0]='0x8154fE1Fe5Db5e7916a004a7B9a1121CFA9aDaAa';
+    var owner  = accounts[0];
+    var account1 = "0xfc2eE3eCbF820DB0E3264358462D64Fda4362133";
+    var account2 = accounts[1];
+    var totalSupply;
+
+  //Test Initial Owner Balance
   it("should put 0 DagtCrowdsale in the first account", function() {
     return DagtCrowdsale.deployed().then(function(instance) {
       return instance.getBalance.call(accounts[0]);
@@ -9,6 +15,7 @@ contract('DagtCrowdsale', function(accounts) {
       assert.equal(balance.valueOf(), 0, "0 wasn't in the first account");
     });
   });
+  //
   it("should call a function that depends on a linked library", function() {
     var dagt;
     var dagtCoinBalance;
@@ -26,6 +33,47 @@ contract('DagtCrowdsale', function(accounts) {
       assert.equal(dagtCoinEthBalance, 2 * dagtCoinBalance, "Library function returned unexpected function, linkage may be broken");
     });
   });
+
+  //Test setBlocksRate
+  it("should put valid DAGT in the arry of blocksRanges arry and rates", function() {
+    var dagt;
+    var rate;
+    return DagtCrowdsale.deployed().then(function(instance) {
+        dagt = instance;
+        return dagt.setBlocksRate([2840652,2908683,2909223,2970937,2977794,3039509,3048012,3108080,3121795,3149223], 
+                 [1700,1600,1400,1240,1118]);
+      }).then(function() {
+        return dagt.getETH2DAGTRate();
+      }).then(function(ret) {
+         assert.equal(ret.valueOf(), 0, "Account2 is right");
+      });
+  });
+
+  //Test transfer
+  it("should put valid DAGT in the account of account1 and account2", function() {
+    var dagt;
+    return DagtCrowdsale.deployed().then(function(instance) {
+        dagt = instance;
+        return dagt.transfer(account1, 1000 * (10 ** 18), {from: owner});
+      }).then(function(ret) {
+        return dagt.transfer(account2, 5000 * (10 ** 18), {from: owner});
+      }).then(function(ret) {
+        return dagt.totalSupply.call();
+      }).then(function(balance) {
+        totalSupply = balance.valueOf();
+        assert.equal(totalSupply, (10 ** 8) * (10 ** 18), "Total supply  has " + (10 ** 8) * (10 ** 18) + " DAGT");
+        return dagt.balanceOf.call(account1);
+      }).then(function(balance1) {
+        assert.equal(balance1.valueOf(), 1000 * (10 ** 18), "Account1 is right");
+        return dagt.balanceOf.call(account2);
+      }).then(function(balance2) {
+        assert.equal(balance2.valueOf(), 5000 * (10 ** 18), "Account2 is right");
+        return dagt.balanceOf.call(owner);
+      }).then(function(balanceOwner) {
+        assert.equal(balanceOwner.valueOf(), 9.9994e+25, "Owner is right");
+      });
+  });
+
   it("should send coin correctly", function() {
     var dagt;
 
