@@ -1,9 +1,9 @@
 pragma solidity ^0.4.11;
 
-import 'zeppelin-solidity/contracts/math/SafeMath.sol';
+import "zeppelin-solidity/contracts/math/SafeMath.sol";
 import "./crowdsale/CappedCrowdsale.sol";
 import "./crowdsale/RefundableCrowdsale.sol";
-import './Dagt.sol'
+import './Dagt.sol';
 
 //contract DagtCrowdSale is CappedCrowdsale, RefundableCrowdsale {
 contract DagtCrowdSale is Dagt,CappedCrowdsale, RefundableCrowdsale {
@@ -21,7 +21,9 @@ contract DagtCrowdSale is Dagt,CappedCrowdsale, RefundableCrowdsale {
   uint[] private rates;
  // 奖励区块高度范围:[0]...[1]
   uint256[] private rewardBlocksHeight = new uint256[](2);
+  //5%
   uint[] private rewardRates;
+  //200-299
   uint[] private extraRewardRanges;
    //1ETH = 1118DAGT
   uint256 public constant DAGTEXCHANGE = 1118;
@@ -59,23 +61,17 @@ contract DagtCrowdSale is Dagt,CappedCrowdsale, RefundableCrowdsale {
       startBlock = _startBlock;
       endBlock = _endBlock;
       wallet =_wallet;
+      totalSupply_ = 100000000 * TOKEN_UNIT;
       ///////////////////
 
   }
 
   function createTokenContract() internal returns (MintableToken) {
       return new Dagt();
-  }
-
-
-
-  modifier onlyPresaleWhitelisted() {
-      require( isWhitelistedPresale(msg.sender) ) ;
-      _;
-  }
+  }  
 
   modifier onlyWhitelisted() {
-      require( isWhitelisted(msg.sender) || isWhitelistedPresale(msg.sender) ) ;
+      require( isWhitelisted(msg.sender)) ;
       _;
   }
 
@@ -93,27 +89,11 @@ contract DagtCrowdSale is Dagt,CappedCrowdsale, RefundableCrowdsale {
       whiteListedAddress[_users] = false;
   }
 
-  /**
-  * @dev Add a list of address to be whitelisted for the Presale And sale.
-  * @param _users , the list of user Address. Tested for out of gas until 200 addresses.
-  */
-  function whitelistAddressesPresale( address[] _users) public onlyOwner {
-      for( uint i = 0 ; i < _users.length ; i++ ) {
-      whiteListedAddressPresale[_users[i]] = true;
-      }
-  }
-
-  function unwhitelistAddressPresale( address _users) public onlyOwner {
-      whiteListedAddressPresale[_users] = false;
-  }
-
   function isWhitelisted(address _user) public constant returns (bool) {
       return whiteListedAddress[_user];
   }
 
-  function isWhitelistedPresale(address _user) public constant returns (bool) {
-      return whiteListedAddressPresale[_user];
-  }
+
 
   function () public payable {
       buyTokens(msg.sender);
@@ -172,6 +152,7 @@ contract DagtCrowdSale is Dagt,CappedCrowdsale, RefundableCrowdsale {
 
     }
 
+    //设置开始 结束区块高度及折扣值,以便计算ETH折扣DAGT
     function setBlocksRate(uint256[] _blocksRanges,uint256[] _rates) public{
       require(_blocksRanges.length >=2);
       require(_blocksRanges.length == _rates.length.mul(2));
@@ -208,7 +189,7 @@ contract DagtCrowdSale is Dagt,CappedCrowdsale, RefundableCrowdsale {
     function setRewardRange(uint256[] _blocksNums, uint[] _extraRewardRanges, uint[] _rewards) public{
       rewardBlocksHeight =  new uint256[](_blocksNums.length);
       extraRewardRanges =  new uint256[](_extraRewardRanges.length);
-      extraRewardRanges =  new uint256[](_rewards.length);
+      rewardRates =  new uint256[](_rewards.length);
       rewardBlocksHeight = _blocksNums;
       extraRewardRanges =_extraRewardRanges;
       rewardRates = _rewards;

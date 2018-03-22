@@ -35,17 +35,55 @@ contract('DagtCrowdsale', function(accounts) {
   });
 
   //Test setBlocksRate
-  it("should put valid DAGT in the arry of blocksRanges arry and rates", function() {
+  it("should put valid DAGT in the arry of blocksRanges blocksRanges and rates", function() {
     var dagt;
     var rate;
     return DagtCrowdsale.deployed().then(function(instance) {
         dagt = instance;
-        return dagt.setBlocksRate([2840652,2908683,2909223,2970937,2977794,3039509,3048012,3108080,3121795,3149223], 
+        return dagt.setBlocksRate([2840652,2908683,2909223,2970937,2977794,3039509,3048012,3108080,3121795,3149223],
                  [1700,1600,1400,1240,1118]);
       }).then(function() {
         return dagt.getETH2DAGTRate();
       }).then(function(ret) {
-         assert.equal(ret.valueOf(), 0, "Account2 is right");
+        console.log(ret)        
+      });
+  });
+
+
+  //Test setRewardRange
+  it("should put valid DAGT in the arry of blocksRewarRanges _blocksNums 、_extraRewardRanges and _rewards", function() {
+    var dagt;
+    return DagtCrowdsale.deployed().then(function(instance) {
+        dagt = instance;
+        return dagt.setRewardRange([2840652,3149223],[200,299,300,499,500,1000000000],[5,10,15]);
+      }).then(function() {
+        return dagt.amountReward(150000);
+      }).then(function(ret) {
+        console.log(ret)        
+      }).then(function(ret) {
+        return dagt.transfer(account1, 1000 * (10 ** 18), {from: owner});     
+      }).then(function(ret) {
+        return dagt.balanceOf.call(account1);    
+      }).then(function(ret) {
+        console.log("balanceOf:"+ret)
+      });
+  });
+
+   //Test WhiteList
+  it("should put valid DAGT in the arry of blocksRewarRanges _blocksNums 、_extraRewardRanges and _rewards", function() {
+    var dagt;
+    return DagtCrowdsale.deployed().then(function(instance) {
+        dagt = instance;
+        return dagt.whitelistAddresses([0xfc2eE3eCbF820DB0E3264358462D64Fda4362133]);
+      }).then(function() {
+        return dagt.isWhitelisted([0xfc2eE3eCbF820DB0E3264358462D64Fda4362133]);
+      }).then(function(ret) {
+        console.log("isWhitelisted:"+ret)    
+         return dagt.unwhitelistAddress([0xfc2eE3eCbF820DB0E3264358462D64Fda4362133]);    
+      }).then(function(ret) {
+         return dagt.isWhitelisted([0xfc2eE3eCbF820DB0E3264358462D64Fda4362133]);        
+      }).then(function(ret) {
+          console.log("isWhitelisted:"+ret)         
       });
   });
 
@@ -71,6 +109,41 @@ contract('DagtCrowdsale', function(accounts) {
         return dagt.balanceOf.call(owner);
       }).then(function(balanceOwner) {
         assert.equal(balanceOwner.valueOf(), 9.9994e+25, "Owner is right");
+      });
+  });
+
+  //Test approve and transferFrom
+  it("should approve the valid allowance", function() {
+      var dagt;
+
+       return dagt.deployed().then(function(instance) {
+          dagt = instance;
+          return dagt.approve(account1, 10000 * (10 ** 18), {from: account2});
+      }).then(function(ret) {
+          return dagt.allowance.call(account2, account1);
+      }).then(function(allowance) {
+          assert.equal(allowance.valueOf(), 10000 * (10 ** 18), "account2 gives account1 " +  4000 * (10 ** 18) + " tokens");
+          return dagt.approve(account1, 0, {from: account2});
+      }).then(function(ret) {
+          return  dagt.allowance.call(account2, account1);
+      }).then(function(allowance) {
+          assert.equal(allowance.valueOf(), 0, "account2 give account1 " + 0 + " tokens");
+          return dagt.approve(account1, 10000 * (10 ** 18), {from: account2});
+      }).then(function(ret) {
+          return dagt.transferFrom(account2, account1, 2000 * (10 ** 18), {from: account1});
+      }).then(function(ret) {
+          return dagt.balanceOf.call(account1);
+      }).then(function(balance1) {
+          assert.equal(balance1.valueOf(), 3000 * (10 ** 18), "Account1 is right");
+          return dagt.balanceOf.call(account2);
+      }).then(function(balance2) {
+          assert.equal(balance2.valueOf(), 3000 * (10 ** 18), "Account2 is right");
+          return dagt.allowance.call(account2, account1);
+      }).then(function(allowance) {
+          assert.equal(allowance.valueOf(), 8000 * (10 ** 18), "account2 gives account1 " +  8000 * (10 ** 18) + " tokens");
+          return dagt.totalSupply.call();
+      }).then(function(totalSupply) {
+          assert.equal(totalSupply.valueOf(), (10 ** 8) * (10 ** 18), "Total supply  has " + (10 ** 8) * (10 ** 18) + " tokens");
       });
   });
 
@@ -104,7 +177,6 @@ contract('DagtCrowdsale', function(accounts) {
       return dagt.getBalance.call(account_two);
     }).then(function(balance) {
       account_two_ending_balance = balance.toNumber();
-
       assert.equal(account_one_ending_balance, account_one_starting_balance - amount, "Amount wasn't correctly taken from the sender");
       assert.equal(account_two_ending_balance, account_two_starting_balance + amount, "Amount wasn't correctly sent to the receiver");
     });
